@@ -28,10 +28,24 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.auth)
 
             //navigation
             implementation(libs.voyager.navigator)
             implementation(libs.voyager.transitions)
+
+            //di
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
+            //image loading
+            implementation(libs.coil.mp)
+
+            //fix logging error
+            implementation("org.slf4j:slf4j-api:1.7.32")  // SLF4J API
+            implementation("ch.qos.logback:logback-classic:1.2.6")  // Logback -  SLF4J
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
