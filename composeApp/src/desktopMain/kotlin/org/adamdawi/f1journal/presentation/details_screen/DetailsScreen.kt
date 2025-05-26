@@ -19,13 +19,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.adamdawi.f1journal.data.api.ApiService
-import org.json.JSONObject
-import org.json.XML
-import java.awt.FileDialog
-import java.awt.Frame
-import java.io.File
-import org.adamdawi.f1journal.BuildConfig
-
 
 data class DetailsScreen(val id: Int): Screen {
     @Composable
@@ -48,13 +41,9 @@ data class DetailsScreen(val id: Int): Screen {
             Button(
                 onClick = {
                     scope.launch(Dispatchers.IO) {
-//                        val result = ApiService().fetchPosts()
-//                        apiResponse = result
-                        val file = chooseXmlFile()
-                        println(file?.readText())
-                        file?.let {
-                            println(convertXmlFileToJson(file).toString())
-                        }
+                        val result = ApiService().fetchPosts()
+                        apiResponse = result
+
                     }
                 }
             ) {
@@ -63,20 +52,4 @@ data class DetailsScreen(val id: Int): Screen {
             Text(apiResponse)
         }
     }
-}
-
-fun chooseXmlFile(): File? {
-    val fileDialog = FileDialog(null as Frame?, "Choose XML file", FileDialog.LOAD)
-    fileDialog.file = "*.xml" // extension filter
-    fileDialog.isVisible = true
-    return if (fileDialog.file != null && fileDialog.file.endsWith(".xml")) {
-        File(fileDialog.directory, fileDialog.file)
-    } else {
-        null
-    }
-}
-
-fun convertXmlFileToJson(file: File): JSONObject {
-    val xmlContent = file.readText()
-    return XML.toJSONObject(xmlContent)
 }
