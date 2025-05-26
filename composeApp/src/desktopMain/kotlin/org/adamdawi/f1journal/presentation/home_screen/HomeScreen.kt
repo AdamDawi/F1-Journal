@@ -1,6 +1,7 @@
 package org.adamdawi.f1journal.presentation.home_screen
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Button
@@ -14,25 +15,23 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.adamdawi.f1journal.presentation.details_screen.DetailsScreen
 import kotlin.random.Random
 
-class HomeScreen: Screen {
+class HomeScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        LazyColumn(
+        Column(
             modifier = Modifier.Companion.fillMaxSize(),
             horizontalAlignment = Alignment.Companion.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            item{
-                Button(
-                    onClick = {
-                        navigator.push(
-                            DetailsScreen(Random.Default.nextInt())
-                        )
-                    }
-                ) {
-                    Text("HIII")
+            Button(
+                onClick = {
+                    navigator.push(
+                        DetailsScreen(Random.Default.nextInt())
+                    )
                 }
+            ) {
+                Text("HIII")
             }
         }
     }

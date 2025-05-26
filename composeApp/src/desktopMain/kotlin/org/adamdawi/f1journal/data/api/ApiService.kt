@@ -7,6 +7,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.adamdawi.f1journal.BuildConfig
 
 class ApiService {
     val httpClient = HttpClient {
@@ -17,7 +18,7 @@ class ApiService {
 
     suspend fun fetchPosts(): String {
         return try {
-            val response: String = httpClient.get("https://jsonplaceholder.typicode.com/posts") {
+            val response: String = httpClient.get(BuildConfig.BASE_URL) {
                 contentType(ContentType.Application.Json)
             }.toString()
             response

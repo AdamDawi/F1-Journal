@@ -1,18 +1,29 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.buildConfig)
 }
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+
+val baseServerUrl = localProperties.getProperty("BASE_URL") ?: ""
 
 kotlin {
     jvm("desktop")
-    
+
     sourceSets {
         val desktopMain by getting
-        
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -46,6 +57,9 @@ kotlin {
             //fix logging error
             implementation("org.slf4j:slf4j-api:1.7.32")  // SLF4J API
             implementation("ch.qos.logback:logback-classic:1.2.6")  // Logback -  SLF4J
+
+            // converter XML -> JSON
+            implementation("org.json:json:20230227")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -54,8 +68,13 @@ kotlin {
     }
 }
 
+buildConfig {
+    packageName("org.adamdawi.f1journal")
+    buildConfigField("String", "BASE_URL", "\"$baseServerUrl\"")
+}
 
 compose.desktop {
+
     application {
         mainClass = "org.adamdawi.f1journal.MainKt"
 
@@ -63,6 +82,9 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "org.adamdawi.f1journal"
             packageVersion = "1.0.0"
+            windows {
+                iconFile.set(project.file("src/commonMain/composeResources/drawable/f1-logo.ico"))
+            }
         }
     }
 }

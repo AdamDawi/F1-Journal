@@ -7,7 +7,7 @@ import org.adamdawi.f1journal.presentation.App
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
-        title = "F1-Journal",
+        title = "F1 Journal"
     ) {
         App()
     }
