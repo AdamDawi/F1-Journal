@@ -66,7 +66,7 @@ class HomeScreen : Screen {
                 Button(
                     onClick = {
                         scope.launch(Dispatchers.IO) {
-                            val file = chooseXmlFile()
+                            val file = chooseFile(filter = ExtensionFilter.XML)
 
                             if(file?.extension == "xml"){
                                 viewModel.onAction(HomeAction.SendXMLFile(file))
@@ -82,7 +82,7 @@ class HomeScreen : Screen {
                 Button(
                     onClick = {
                         scope.launch(Dispatchers.IO) {
-                            val file = chooseJsonFile()
+                            val file = chooseFile(ExtensionFilter.JSON)
 
                             if(file?.extension == "json"){
                                 viewModel.onAction(HomeAction.SendJSONFile(file))
@@ -99,28 +99,19 @@ class HomeScreen : Screen {
     }
 }
 
-fun chooseXmlFile(): File? {
+private fun chooseFile(filter: ExtensionFilter): File? {
     val fileDialog =
         FileDialog(null as Frame?, "Choose XML file", FileDialog.LOAD)
-    fileDialog.file = "*.xml" // extension filter
+    fileDialog.file = filter.extension
     fileDialog.isVisible = true
-    return if (fileDialog.file != null && fileDialog.file.endsWith(".xml")) {
+    return if (fileDialog.file != null) {
         File(fileDialog.directory, fileDialog.file)
     } else {
         null
     }
 }
 
-fun chooseJsonFile(): File? {
-    val fileDialog = FileDialog(null as Frame?, "Choose JSON file", FileDialog.LOAD)
-    fileDialog.file = "*.json"
-    fileDialog.isVisible = true
-    return if (fileDialog.file != null && fileDialog.file.endsWith(".json", ignoreCase = true)) {
-        File(fileDialog.directory, fileDialog.file)
-    } else {
-        null
-    }
+private enum class ExtensionFilter(val extension: String){
+    JSON("*.json"),
+    XML("*.xml")
 }
-
-
-

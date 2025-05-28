@@ -9,6 +9,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.adamdawi.f1journal.BuildConfig
 
+//TODO delete it later when repo is ready
 class ApiService {
     val httpClient = HttpClient {
         install(ContentNegotiation) {

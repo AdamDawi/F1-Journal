@@ -1,11 +1,14 @@
 package org.adamdawi.f1journal.presentation.home_screen
 
 import androidx.lifecycle.ViewModel
+import org.adamdawi.f1journal.domain.F1Repository
 import org.json.JSONObject
 import org.json.XML
 import java.io.File
 
-class HomeViewModel: ViewModel() {
+class HomeViewModel(
+    private val repository: F1Repository
+): ViewModel() {
 
     fun onAction(action: HomeAction){
         when(action){
