@@ -43,7 +43,6 @@ data class DetailsScreen(val id: Int): Screen {
                     scope.launch(Dispatchers.IO) {
                         val result = ApiService().fetchPosts()
                         apiResponse = result
-
                     }
                 }
             ) {

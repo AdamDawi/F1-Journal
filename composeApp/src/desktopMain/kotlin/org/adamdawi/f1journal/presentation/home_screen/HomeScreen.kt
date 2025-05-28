@@ -82,6 +82,13 @@ class HomeScreen : Screen {
                 Button(
                     onClick = {
                         scope.launch(Dispatchers.IO) {
+                            val file = chooseJsonFile()
+
+                            if(file?.extension == "json"){
+                                viewModel.onAction(HomeAction.SendJSONFile(file))
+                            }else{
+                                showError = true
+                            }
                         }
                     }
                 ) {
@@ -98,6 +105,17 @@ fun chooseXmlFile(): File? {
     fileDialog.file = "*.xml" // extension filter
     fileDialog.isVisible = true
     return if (fileDialog.file != null && fileDialog.file.endsWith(".xml")) {
+        File(fileDialog.directory, fileDialog.file)
+    } else {
+        null
+    }
+}
+
+fun chooseJsonFile(): File? {
+    val fileDialog = FileDialog(null as Frame?, "Choose JSON file", FileDialog.LOAD)
+    fileDialog.file = "*.json"
+    fileDialog.isVisible = true
+    return if (fileDialog.file != null && fileDialog.file.endsWith(".json", ignoreCase = true)) {
         File(fileDialog.directory, fileDialog.file)
     } else {
         null

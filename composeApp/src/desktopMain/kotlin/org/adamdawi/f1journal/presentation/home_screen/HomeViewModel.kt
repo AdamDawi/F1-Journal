@@ -13,11 +13,15 @@ class HomeViewModel: ViewModel() {
                 val jsonObject = convertXmlFileToJson(action.file)
                 println(jsonObject)
             }
+
+            is HomeAction.SendJSONFile -> {
+                val jsonObject = action.file.readText()
+                println(jsonObject)
+            }
         }
     }
 
     private fun convertXmlFileToJson(file: File): JSONObject {
-        println(file.readText())
         val xmlContent = file.readText()
         return XML.toJSONObject(xmlContent)
     }
