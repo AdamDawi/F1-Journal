@@ -17,14 +17,13 @@ class ChartsViewModel(
     private val _state = MutableStateFlow(ChartsState())
     val state = _state.onStart {
         getDrivers()
-
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue =_state.value
     )
 
-    fun getDrivers(){
+    private fun getDrivers(){
         when(val result = repository.getDrivers()){
             is Result.Error -> {
 

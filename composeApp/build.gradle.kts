@@ -63,7 +63,6 @@ kotlin {
 
             //chart library
             implementation(libs.vico.multiplatform)
-//            implementation("com.github.tehras:charts:0.2.4-alpha")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

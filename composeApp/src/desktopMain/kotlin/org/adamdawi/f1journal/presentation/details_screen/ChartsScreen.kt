@@ -63,7 +63,7 @@ data class DetailsScreen(val id: Int): Screen {
         val modelProducer = remember { CartesianChartModelProducer() }
         val modelProducer2 = remember { CartesianChartModelProducer() }
 
-        LaunchedEffect(Unit) {
+        LaunchedEffect(state.value.drivers) {
             state.value.drivers?.let {
                 loadChartData(modelProducer, it)
             }
@@ -131,7 +131,6 @@ data class DetailsScreen(val id: Int): Screen {
                         if(state.value.drivers != null) {
                             AveragePositionChart(drivers = state.value.drivers!!, modelProducer = modelProducer)
                         }else{
-                            //TODO fix no data
                             Text("No data")
                         }
                     }
