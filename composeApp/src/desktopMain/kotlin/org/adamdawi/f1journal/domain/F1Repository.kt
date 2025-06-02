@@ -5,4 +5,5 @@ import org.adamdawi.f1journal.domain.util.Result
 
 interface F1Repository {
     fun sendF1Data(): Result<String, DataError.Network>
+    fun getDrivers(): Result<List<DriverAveragePosition>, DataError.Network>
 }

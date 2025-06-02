@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -39,41 +40,38 @@ import com.patrykandpatrick.vico.multiplatform.cartesian.data.CartesianChartMode
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.multiplatform.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.multiplatform.cartesian.rememberCartesianChart
+import org.adamdawi.f1journal.domain.DriverAveragePosition
+import org.adamdawi.f1journal.domain.DriverPerformanceDifference
+import org.adamdawi.f1journal.presentation.details_screen.components.AveragePositionChart
 import org.koin.compose.viewmodel.koinViewModel
 
 data class DetailsScreen(val id: Int): Screen {
 
     enum class ChartType(val displayName: String) {
-        AVG_POSITION("Avg drivers position in weather"),
-        PERFORMANCE_DIFFERENCE("Difference in performance"),
+        AVG_POSITION("Average Position (Dry vs Rain)"),
+        PERFORMANCE_DIFFERENCE("Performance Difference (Dry - Rain)")
     }
 
     @Composable
     override fun Content() {
         val viewModel: ChartsViewModel = koinViewModel()
+        val state = viewModel.state.collectAsStateWithLifecycle()
         val navigator = LocalNavigator.currentOrThrow
         var selectedChart by remember { mutableStateOf(ChartType.AVG_POSITION) }
         var expanded by remember { mutableStateOf(false) }
 
-
         val modelProducer = remember { CartesianChartModelProducer() }
-        LaunchedEffect(Unit) {
-            loadChartData(modelProducer, drivers)
-        }
-
         val modelProducer2 = remember { CartesianChartModelProducer() }
 
         LaunchedEffect(Unit) {
-            modelProducer2.runTransaction {
-                columnSeries {
-                    // Populate the chart with performance differences
-                    sortedPerformanceDifferences.forEachIndexed { index, driver ->
-                        // Map each driver to a unique X position (index)
-                        series(index.toDouble(), driver.performanceDifference)
-                    }
-                }
+            state.value.drivers?.let {
+                loadChartData(modelProducer, it)
+            }
+            state.value.driversDifference?.let {
+                loadChartData2(modelProducer2, it)
             }
         }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -128,49 +126,38 @@ data class DetailsScreen(val id: Int): Screen {
                     }
                 }
 
-                // Tu mogą być odstępy np. Spacer(modifier = Modifier.height(16.dp))
-
                 when (selectedChart) {
                     ChartType.AVG_POSITION -> {
-                        val labelMap: Map<Int, String> = drivers.mapIndexed { index, driver ->
-                            index to driver.driverName
-                        }.toMap()
-
-                        val bottomAxis = HorizontalAxis.rememberBottom(
-                            valueFormatter = { _, value, _ ->
-                                labelMap[value.toInt()] ?: ""
-                            }
-                        )
-
-                        CartesianChartHost(
-                            rememberCartesianChart(
-                                rememberColumnCartesianLayer(),
-                                startAxis = VerticalAxis.rememberStart(),
-                                bottomAxis = bottomAxis,
-                            ),
-                            modelProducer,
-                        )
+                        if(state.value.drivers != null) {
+                            AveragePositionChart(drivers = state.value.drivers!!, modelProducer = modelProducer)
+                        }else{
+                            //TODO fix no data
+                            Text("No data")
+                        }
                     }
 
                     ChartType.PERFORMANCE_DIFFERENCE -> {
-                        val labelMap2 = sortedPerformanceDifferences.mapIndexed { index, driver ->
-                            index.toDouble() to driver.name
-                        }.toMap()
+                        if(state.value.driversDifference != null){
+                            val labelMap: Map<Int, String> = state.value.driversDifference!!.mapIndexed { index, driver ->
+                                index to driver.name
+                            }.toMap()
+                            val bottomAxis = HorizontalAxis.rememberBottom(
+                                valueFormatter = { _, value, _ ->
+                                    labelMap[value.toInt()] ?: ""
+                                }
+                            )
 
-                        val bottomAxis2 = HorizontalAxis.rememberBottom(
-                            valueFormatter = { _, value, _ ->
-                                labelMap2[value] ?: ""
-                            }
-                        )
-
-                        CartesianChartHost(
-                            rememberCartesianChart(
-                                rememberColumnCartesianLayer(),
-                                startAxis = VerticalAxis.rememberStart(),
-                                bottomAxis = bottomAxis2,
-                            ),
-                            modelProducer2,
-                        )
+                            CartesianChartHost(
+                                rememberCartesianChart(
+                                    rememberColumnCartesianLayer(),
+                                    startAxis = VerticalAxis.rememberStart(),
+                                    bottomAxis = bottomAxis,
+                                ),
+                                modelProducer2,
+                            )
+                        }else{
+                            Text("No data")
+                        }
                     }
                 }
             }
@@ -190,45 +177,13 @@ suspend fun loadChartData(
     }
 }
 
-val drivers = listOf(
-    DriverAveragePosition("Verstappen", 1.3f, 1.1f),
-    DriverAveragePosition("Hamilton", 3.0f, 2.5f),
-    DriverAveragePosition("Leclerc", 4.2f, 5.1f),
-    DriverAveragePosition("Norris", 5.4f, 3.9f),
-    DriverAveragePosition("Sainz", 5.9f, 6.0f),
-    DriverAveragePosition("Perez", 6.5f, 7.2f),
-    DriverAveragePosition("Russell", 7.1f, 6.8f),
-    DriverAveragePosition("Alonso", 8.0f, 7.5f),
-    DriverAveragePosition("Ocon", 9.2f, 9.0f),
-    DriverAveragePosition("Gasly", 10.4f, 10.1f),
-    DriverAveragePosition("Zhou", 11.5f, 11.3f),
-    DriverAveragePosition("Tsunoda", 12.0f, 12.4f),
-    DriverAveragePosition("Schumacher", 13.1f, 13.2f),
-    DriverAveragePosition("Magnussen", 14.3f, 13.7f),
-    DriverAveragePosition("Latifi", 15.2f, 15.4f),
-    DriverAveragePosition("Albon", 16.0f, 16.1f),
-    DriverAveragePosition("Stroll", 17.5f, 18.0f),
-    DriverAveragePosition("Ricciardo", 18.2f, 17.9f),
-    DriverAveragePosition("Vettel", 19.1f, 19.3f)
-)
-
-val performanceDifferences = drivers.map { driver ->
-    val difference = driver.dryAvgPosition - driver.rainyAvgPosition
-    DriverPerformanceDifference(driver.driverName, difference)
+suspend fun loadChartData2(
+    modelProducer: CartesianChartModelProducer,
+    data: List<DriverPerformanceDifference>
+) {
+    modelProducer.runTransaction {
+        columnSeries {
+            series(data.map { it.performanceDifference })
+        }
+    }
 }
-
-// Sorting the list to show who has the biggest positive difference (i.e., improvement in the rain)
-val sortedPerformanceDifferences = performanceDifferences.sortedByDescending { it.performanceDifference }
-
-
-
-data class DriverAveragePosition(
-    val driverName: String,
-    val dryAvgPosition: Float,
-    val rainyAvgPosition: Float
-)
-
-data class DriverPerformanceDifference(
-    val name: String,
-    val performanceDifference: Float
-)
