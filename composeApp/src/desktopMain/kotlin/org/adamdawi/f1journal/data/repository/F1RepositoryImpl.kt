@@ -9,7 +9,7 @@ import org.adamdawi.f1journal.domain.util.Result
 class F1RepositoryImpl(
     private val httpClient: HttpClient
 ): F1Repository {
-    override fun sendF1Data(): Result<String, DataError.Network> {
+    override suspend fun sendF1Data(): Result<String, DataError.Network> {
 //        val result = httpClient.post<MoviesBasedOnMovieResponse>(
 //            route = "movie/$movieId/recommendations",
 //            queryParameters = mapOf(
@@ -21,7 +21,7 @@ class F1RepositoryImpl(
         return Result.Error(DataError.Network.SERVER_ERROR)
     }
 
-    override fun getDrivers(): Result<List<DriverAveragePosition>, DataError.Network> {
+    override suspend fun getDrivers(): Result<List<DriverAveragePosition>, DataError.Network> {
         return Result.Success(listOf(
             DriverAveragePosition("Verstappen", 1.3f, 1.1f),
             DriverAveragePosition("Hamilton", 3.0f, 2.5f),

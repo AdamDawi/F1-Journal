@@ -42,10 +42,13 @@ import com.patrykandpatrick.vico.multiplatform.cartesian.layer.rememberColumnCar
 import com.patrykandpatrick.vico.multiplatform.cartesian.rememberCartesianChart
 import org.adamdawi.f1journal.domain.DriverAveragePosition
 import org.adamdawi.f1journal.domain.DriverPerformanceDifference
+import org.adamdawi.f1journal.presentation.components.ErrorScreen
+import org.adamdawi.f1journal.presentation.components.LoadingScreen
+import org.adamdawi.f1journal.presentation.details_screen.DetailsScreen.ChartType
 import org.adamdawi.f1journal.presentation.details_screen.components.AveragePositionChart
 import org.koin.compose.viewmodel.koinViewModel
 
-data class DetailsScreen(val id: Int): Screen {
+data class DetailsScreen(val id: Int) : Screen {
 
     enum class ChartType(val displayName: String) {
         AVG_POSITION("Average Position (Dry vs Rain)"),
@@ -56,107 +59,126 @@ data class DetailsScreen(val id: Int): Screen {
     override fun Content() {
         val viewModel: ChartsViewModel = koinViewModel()
         val state = viewModel.state.collectAsStateWithLifecycle()
-        val navigator = LocalNavigator.currentOrThrow
-        var selectedChart by remember { mutableStateOf(ChartType.AVG_POSITION) }
-        var expanded by remember { mutableStateOf(false) }
 
-        val modelProducer = remember { CartesianChartModelProducer() }
-        val modelProducer2 = remember { CartesianChartModelProducer() }
-
-        LaunchedEffect(state.value.drivers) {
-            state.value.drivers?.let {
-                loadChartData(modelProducer, it)
-            }
-            state.value.driversDifference?.let {
-                loadChartData2(modelProducer2, it)
-            }
-        }
-
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null
-                            )
-                        }
-                    },
-                    title = { Text("Charts") }
+        when{
+            state.value.isLoading -> LoadingScreen()
+            state.value.error != null -> ErrorScreen(message = state.value.error)
+            else -> {
+                ChartsContent(
+                    state = state.value
                 )
             }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
-            ) {
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize(Alignment.TopStart)
-                        .zIndex(1f)
-                ) {
-                    Column {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Choose chart:")
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Button(onClick = { expanded = true }) {
-                                Text(selectedChart.displayName)
-                            }
-                        }
+        }
+    }
+}
 
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            ChartType.entries.forEach { chart ->
-                                DropdownMenuItem(onClick = {
-                                    selectedChart = chart
-                                    expanded = false
-                                }) {
-                                    Text(chart.displayName)
-                                }
+@Composable
+fun ChartsContent(
+    state: ChartsState
+) {
+    val navigator = LocalNavigator.currentOrThrow
+    var selectedChart by remember { mutableStateOf(ChartType.AVG_POSITION) }
+    var expanded by remember { mutableStateOf(false) }
+
+    val modelProducer = remember { CartesianChartModelProducer() }
+    val modelProducer2 = remember { CartesianChartModelProducer() }
+
+    LaunchedEffect(state.drivers) {
+        state.drivers?.let {
+            loadChartData(modelProducer, it)
+        }
+        state.driversDifference?.let {
+            loadChartData2(modelProducer2, it)
+        }
+    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = { navigator.pop() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
+                    }
+                },
+                title = { Text("Charts") }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Box(
+                modifier = Modifier
+                    .wrapContentSize(Alignment.TopStart)
+                    .zIndex(1f)
+            ) {
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Choose chart:")
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Button(onClick = { expanded = true }) {
+                            Text(selectedChart.displayName)
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        ChartType.entries.forEach { chart ->
+                            DropdownMenuItem(onClick = {
+                                selectedChart = chart
+                                expanded = false
+                            }) {
+                                Text(chart.displayName)
                             }
                         }
                     }
                 }
+            }
 
-                when (selectedChart) {
-                    ChartType.AVG_POSITION -> {
-                        if(state.value.drivers != null) {
-                            AveragePositionChart(drivers = state.value.drivers!!, modelProducer = modelProducer)
-                        }else{
-                            Text("No data")
-                        }
+            when (selectedChart) {
+                ChartType.AVG_POSITION -> {
+                    if (state.drivers != null) {
+                        AveragePositionChart(
+                            drivers = state.drivers,
+                            modelProducer = modelProducer
+                        )
+                    } else {
+                        Text("No data")
                     }
+                }
 
-                    ChartType.PERFORMANCE_DIFFERENCE -> {
-                        if(state.value.driversDifference != null){
-                            val labelMap: Map<Int, String> = state.value.driversDifference!!.mapIndexed { index, driver ->
+                ChartType.PERFORMANCE_DIFFERENCE -> {
+                    if (state.driversDifference != null) {
+                        val labelMap: Map<Int, String> =
+                            state.driversDifference.mapIndexed { index, driver ->
                                 index to driver.name
                             }.toMap()
-                            val bottomAxis = HorizontalAxis.rememberBottom(
-                                valueFormatter = { _, value, _ ->
-                                    labelMap[value.toInt()] ?: ""
-                                }
-                            )
+                        val bottomAxis = HorizontalAxis.rememberBottom(
+                            valueFormatter = { _, value, _ ->
+                                labelMap[value.toInt()] ?: ""
+                            }
+                        )
 
-                            CartesianChartHost(
-                                rememberCartesianChart(
-                                    rememberColumnCartesianLayer(),
-                                    startAxis = VerticalAxis.rememberStart(),
-                                    bottomAxis = bottomAxis,
-                                ),
-                                modelProducer2,
-                            )
-                        }else{
-                            Text("No data")
-                        }
+                        CartesianChartHost(
+                            rememberCartesianChart(
+                                rememberColumnCartesianLayer(),
+                                startAxis = VerticalAxis.rememberStart(),
+                                bottomAxis = bottomAxis,
+                            ),
+                            modelProducer2,
+                        )
+                    } else {
+                        Text("No data")
                     }
                 }
             }
