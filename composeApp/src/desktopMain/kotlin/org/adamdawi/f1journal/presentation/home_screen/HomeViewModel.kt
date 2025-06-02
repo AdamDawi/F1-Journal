@@ -21,11 +21,21 @@ class HomeViewModel(
                 val jsonObject = action.file.readText()
                 println(jsonObject)
             }
+
         }
     }
 
     private fun convertXmlFileToJson(file: File): JSONObject {
         val xmlContent = file.readText()
         return XML.toJSONObject(xmlContent)
+    }
+
+    fun getExportedJson(): String{
+        return "json"
+    }
+
+
+    fun getExportedXML(): String{
+        return "xml"
     }
 }

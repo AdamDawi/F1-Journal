@@ -95,15 +95,55 @@ class HomeScreen : Screen {
                     Text("Import JSON file")
                 }
             }
+
+            Row(
+                modifier = Modifier.align(Alignment.TopStart)
+            ) {
+                Button(
+                    onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            val file = chooseFile(filter = ExtensionFilter.XML, isSave = true)
+
+                            if(file != null && file.extension == "xml"){
+                                val xmlData = viewModel.getExportedXML()
+                                file.writeText(xmlData)
+                            } else {
+                                showError = true
+                            }
+                        }
+                    }
+                ) {
+                    Text("Export XML file")
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Button(
+                    onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            val file = chooseFile(filter = ExtensionFilter.JSON, isSave = true)
+
+                            if(file != null && file.extension == "json"){
+                                val jsonData = viewModel.getExportedJson()
+                                file.writeText(jsonData)
+                            } else {
+                                showError = true
+                            }
+                        }
+                    }
+                ) {
+                    Text("Export JSON file")
+                }
+            }
         }
     }
 }
 
-private fun chooseFile(filter: ExtensionFilter): File? {
-    val fileDialog =
-        FileDialog(null as Frame?, "Choose XML file", FileDialog.LOAD)
+private fun chooseFile(filter: ExtensionFilter, isSave: Boolean = false): File? {
+    val fileDialog = FileDialog(null as Frame?, if (isSave) "Save File" else "Choose File",
+        if (isSave) FileDialog.SAVE else FileDialog.LOAD)
+
     fileDialog.file = filter.extension
     fileDialog.isVisible = true
+
     return if (fileDialog.file != null) {
         File(fileDialog.directory, fileDialog.file)
     } else {
