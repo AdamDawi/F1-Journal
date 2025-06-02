@@ -55,10 +55,10 @@ class HomeScreen : Screen {
                         )
                     }
                 ) {
-                    Text("Go to next screen")
+                    Text("Go to charts screen")
                 }
 
-                ErrorDialog(show = showError, message = "Error importing file", onDismiss = { showError = false })
+                ErrorDialog(show = showError, message = "Error importing/exporting file", onDismiss = { showError = false })
             }
             Row(
                 modifier = Modifier.align(Alignment.TopEnd)
