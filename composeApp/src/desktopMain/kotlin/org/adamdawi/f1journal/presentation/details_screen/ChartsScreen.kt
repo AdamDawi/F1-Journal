@@ -33,19 +33,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.patrykandpatrick.vico.multiplatform.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.multiplatform.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.multiplatform.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.multiplatform.cartesian.layer.rememberColumnCartesianLayer
-import com.patrykandpatrick.vico.multiplatform.cartesian.rememberCartesianChart
 import org.adamdawi.f1journal.domain.DriverAveragePosition
 import org.adamdawi.f1journal.domain.DriverPerformanceDifference
 import org.adamdawi.f1journal.presentation.components.ErrorScreen
 import org.adamdawi.f1journal.presentation.components.LoadingScreen
 import org.adamdawi.f1journal.presentation.details_screen.DetailsScreen.ChartType
 import org.adamdawi.f1journal.presentation.details_screen.components.AveragePositionChart
+import org.adamdawi.f1journal.presentation.details_screen.components.PerformanceDifferenceChart
 import org.koin.compose.viewmodel.koinViewModel
 
 data class DetailsScreen(val id: Int) : Screen {
@@ -159,23 +155,9 @@ fun ChartsContent(
 
                 ChartType.PERFORMANCE_DIFFERENCE -> {
                     if (state.driversDifference != null) {
-                        val labelMap: Map<Int, String> =
-                            state.driversDifference.mapIndexed { index, driver ->
-                                index to driver.name
-                            }.toMap()
-                        val bottomAxis = HorizontalAxis.rememberBottom(
-                            valueFormatter = { _, value, _ ->
-                                labelMap[value.toInt()] ?: ""
-                            }
-                        )
-
-                        CartesianChartHost(
-                            rememberCartesianChart(
-                                rememberColumnCartesianLayer(),
-                                startAxis = VerticalAxis.rememberStart(),
-                                bottomAxis = bottomAxis,
-                            ),
-                            modelProducer2,
+                        PerformanceDifferenceChart(
+                            driversDifference = state.driversDifference,
+                            modelProducer = modelProducer2
                         )
                     } else {
                         Text("No data")
