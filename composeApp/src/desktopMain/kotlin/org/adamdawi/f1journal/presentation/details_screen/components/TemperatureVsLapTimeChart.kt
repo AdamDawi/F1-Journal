@@ -3,7 +3,6 @@ package org.adamdawi.f1journal.presentation.details_screen.components
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -25,8 +24,8 @@ fun TemperatureVsLapTimeChart(
     data: List<TemperatureLapTime>,
     modelProducer: CartesianChartModelProducer
 ) {
-    val minY = remember { mutableStateOf(data.minOf { it.avgLapTimeMs } - 50.0) }
-    val maxY = remember { mutableStateOf(data.maxOf { it.avgLapTimeMs } + 50.0) }
+    val minY = remember(data) { data.minOf { it.avgLapTimeMs } - 50.0 }
+    val maxY = remember(data) { data.maxOf { it.avgLapTimeMs } + 50.0 }
 
     val bottomAxis = HorizontalAxis.rememberBottom(
         title = "Avg. Temperature (°C)",
@@ -48,8 +47,8 @@ fun TemperatureVsLapTimeChart(
         rememberCartesianChart(
             rememberLineCartesianLayer(
                 rangeProvider = CartesianLayerRangeProvider.fixed(
-                    minY = minY.value,
-                    maxY = maxY.value
+                    minY = minY,
+                    maxY = maxY
                 )
             ),
             startAxis = startAxis,

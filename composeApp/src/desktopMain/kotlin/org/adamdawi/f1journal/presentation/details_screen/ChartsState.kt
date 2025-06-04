@@ -9,5 +9,7 @@ data class ChartsState(
     val error: String? = null,
     val drivers: List<DriverAveragePosition>? = null,
     val driversDifference: List<DriverPerformanceDifference>? = null,
-    val temperatureLapTime: List<TemperatureLapTime>? = null
+    val temperatureLapTime: List<TemperatureLapTime>? = null,
+    val isDriversDataLoading: Boolean = true,
+    val isTemperatureLapTimeDataLoading: Boolean = true
 )

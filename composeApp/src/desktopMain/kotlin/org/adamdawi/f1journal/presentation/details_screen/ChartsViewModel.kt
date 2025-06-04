@@ -28,7 +28,6 @@ class ChartsViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue =_state.value
     )
-    private var loadingCounter = MutableStateFlow(2)
 
     private fun getTemperatureLapTime() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -46,17 +45,9 @@ class ChartsViewModel(
                         _state.update {
                             it.copy(temperatureLapTime = sortedData)
                         }
-                        loadingCounter.update {
-                            it-1
-                        }
-                        if(loadingCounter.value==0){
-                            _state.update {
-                                it.copy(isLoading = false)
-                            }
-                        }
+                        checkLoadingComplete()
                     }
                 }
-
         }
     }
 
@@ -86,16 +77,14 @@ class ChartsViewModel(
                             driversDifference = sortedPerformanceDifferences
                         )
                     }
-                    loadingCounter.update {
-                        it-1
-                    }
-                    if(loadingCounter.value==0){
-                        _state.update {
-                            it.copy(isLoading = false)
-                        }
-                    }
+                    checkLoadingComplete()
                 }
             }
+        }
+    }
+    private fun checkLoadingComplete() {
+        if (_state.value.drivers != null && _state.value.temperatureLapTime != null) {
+            _state.update { it.copy(isLoading = false) }
         }
     }
 }

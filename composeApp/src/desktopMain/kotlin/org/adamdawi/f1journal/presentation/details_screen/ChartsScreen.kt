@@ -84,7 +84,6 @@ fun ChartsContent(
     val modelProducer2 = remember { CartesianChartModelProducer() }
     val modelProducer3 = remember { CartesianChartModelProducer() }
 
-
     LaunchedEffect(state.drivers) {
         state.drivers?.let {
             loadChartData(modelProducer, it)
