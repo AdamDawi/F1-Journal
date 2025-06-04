@@ -1,5 +1,6 @@
 package org.adamdawi.f1journal.presentation.details_screen
 
+import AveragePositionChart
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,13 +37,13 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.multiplatform.common.data.ExtraStore
 import org.adamdawi.f1journal.domain.model.DriverAveragePosition
 import org.adamdawi.f1journal.domain.model.DriverPerformanceDifference
 import org.adamdawi.f1journal.domain.model.TemperatureLapTime
 import org.adamdawi.f1journal.presentation.components.ErrorScreen
 import org.adamdawi.f1journal.presentation.components.LoadingScreen
 import org.adamdawi.f1journal.presentation.details_screen.DetailsScreen.ChartType
-import org.adamdawi.f1journal.presentation.details_screen.components.AveragePositionChart
 import org.adamdawi.f1journal.presentation.details_screen.components.PerformanceDifferenceChart
 import org.adamdawi.f1journal.presentation.details_screen.components.TemperatureVsLapTimeChart
 import org.koin.compose.viewmodel.koinViewModel
@@ -70,7 +71,7 @@ data class DetailsScreen(val id: Int) : Screen {
         }
     }
 }
-
+val legendKey = ExtraStore.Key<List<String>>()
 @Composable
 fun ChartsContent(
     state: ChartsState
@@ -196,6 +197,7 @@ suspend fun loadChartData(
             series(data.map { it.dryAvgPosition })
             series(data.map { it.rainyAvgPosition })
         }
+        extras { it[legendKey] = listOf("Dry", "Rain") }
     }
 }
 
