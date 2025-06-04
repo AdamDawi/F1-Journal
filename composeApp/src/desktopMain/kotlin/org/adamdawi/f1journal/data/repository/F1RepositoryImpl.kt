@@ -1,8 +1,9 @@
 package org.adamdawi.f1journal.data.repository
 
 import io.ktor.client.HttpClient
-import org.adamdawi.f1journal.domain.DriverAveragePosition
-import org.adamdawi.f1journal.domain.F1Repository
+import org.adamdawi.f1journal.domain.model.DriverAveragePosition
+import org.adamdawi.f1journal.domain.repository.F1Repository
+import org.adamdawi.f1journal.domain.model.TemperatureLapTime
 import org.adamdawi.f1journal.domain.util.DataError
 import org.adamdawi.f1journal.domain.util.Result
 
@@ -42,6 +43,17 @@ class F1RepositoryImpl(
             DriverAveragePosition("Stroll", 17.5f, 18.0f),
             DriverAveragePosition("Ricciardo", 18.2f, 17.9f),
             DriverAveragePosition("Vettel", 19.1f, 19.3f)
+        ))
+    }
+
+    override suspend fun getTemperatureVsLapTimes(): Result<List<TemperatureLapTime>, DataError.Network> {
+        return Result.Success(listOf(
+            TemperatureLapTime(20f, 1100f),
+            TemperatureLapTime(22f, 1050f),
+            TemperatureLapTime(24f, 1030f),
+            TemperatureLapTime(26f, 1010f),
+            TemperatureLapTime(28f, 1005f),
+            TemperatureLapTime(30f, 1000f),
         ))
     }
 

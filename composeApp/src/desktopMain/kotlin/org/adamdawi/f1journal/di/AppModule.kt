@@ -4,7 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import org.adamdawi.f1journal.data.networking.HttpClientFactory
 import org.adamdawi.f1journal.data.repository.F1RepositoryImpl
-import org.adamdawi.f1journal.domain.F1Repository
+import org.adamdawi.f1journal.domain.repository.F1Repository
 import org.adamdawi.f1journal.presentation.details_screen.ChartsViewModel
 import org.adamdawi.f1journal.presentation.home_screen.HomeViewModel
 import org.koin.core.module.dsl.bind

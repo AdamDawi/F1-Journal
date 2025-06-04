@@ -1,7 +1,7 @@
 package org.adamdawi.f1journal.presentation.home_screen
 
 import androidx.lifecycle.ViewModel
-import org.adamdawi.f1journal.domain.F1Repository
+import org.adamdawi.f1journal.domain.repository.F1Repository
 import org.json.JSONObject
 import org.json.XML
 import java.io.File
@@ -21,7 +21,6 @@ class HomeViewModel(
                 val jsonObject = action.file.readText()
                 println(jsonObject)
             }
-
         }
     }
 
@@ -33,7 +32,6 @@ class HomeViewModel(
     fun getExportedJson(): String{
         return "json"
     }
-
 
     fun getExportedXML(): String{
         return "xml"

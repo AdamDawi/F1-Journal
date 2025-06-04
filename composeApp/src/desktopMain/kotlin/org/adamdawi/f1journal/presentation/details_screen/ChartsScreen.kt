@@ -35,20 +35,23 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.columnSeries
-import org.adamdawi.f1journal.domain.DriverAveragePosition
-import org.adamdawi.f1journal.domain.DriverPerformanceDifference
+import com.patrykandpatrick.vico.multiplatform.cartesian.data.lineSeries
+import org.adamdawi.f1journal.domain.model.DriverAveragePosition
+import org.adamdawi.f1journal.domain.model.DriverPerformanceDifference
+import org.adamdawi.f1journal.domain.model.TemperatureLapTime
 import org.adamdawi.f1journal.presentation.components.ErrorScreen
 import org.adamdawi.f1journal.presentation.components.LoadingScreen
 import org.adamdawi.f1journal.presentation.details_screen.DetailsScreen.ChartType
 import org.adamdawi.f1journal.presentation.details_screen.components.AveragePositionChart
 import org.adamdawi.f1journal.presentation.details_screen.components.PerformanceDifferenceChart
+import org.adamdawi.f1journal.presentation.details_screen.components.TemperatureVsLapTimeChart
 import org.koin.compose.viewmodel.koinViewModel
 
 data class DetailsScreen(val id: Int) : Screen {
-
     enum class ChartType(val displayName: String) {
         AVG_POSITION("Average Position (Dry vs Rain)"),
-        PERFORMANCE_DIFFERENCE("Performance Difference (Dry - Rain)")
+        PERFORMANCE_DIFFERENCE("Performance Difference (Dry - Rain)"),
+        TEMP_VS_LAP_TIME("Temperature vs Avg Lap Time")
     }
 
     @Composable
@@ -78,6 +81,8 @@ fun ChartsContent(
 
     val modelProducer = remember { CartesianChartModelProducer() }
     val modelProducer2 = remember { CartesianChartModelProducer() }
+    val modelProducer3 = remember { CartesianChartModelProducer() }
+
 
     LaunchedEffect(state.drivers) {
         state.drivers?.let {
@@ -85,6 +90,9 @@ fun ChartsContent(
         }
         state.driversDifference?.let {
             loadChartData2(modelProducer2, it)
+        }
+        state.temperatureLapTime?.let {
+            loadChartData3(modelProducer3, it)
         }
     }
     Scaffold(
@@ -163,6 +171,17 @@ fun ChartsContent(
                         Text("No data")
                     }
                 }
+
+                ChartType.TEMP_VS_LAP_TIME -> {
+                    if (state.temperatureLapTime != null) {
+                        TemperatureVsLapTimeChart(
+                            data = state.temperatureLapTime,
+                            modelProducer = modelProducer3
+                        )
+                    } else {
+                        Text("No data")
+                    }
+                }
             }
         }
     }
@@ -187,6 +206,19 @@ suspend fun loadChartData2(
     modelProducer.runTransaction {
         columnSeries {
             series(data.map { it.performanceDifference })
+        }
+    }
+}
+
+suspend fun loadChartData3(
+    modelProducer: CartesianChartModelProducer,
+    data: List<TemperatureLapTime>
+) {
+    modelProducer.runTransaction {
+        lineSeries {
+            series(
+                data.map { it.trackTemperature }, data.map { it.avgLapTimeMs }
+            )
         }
     }
 }

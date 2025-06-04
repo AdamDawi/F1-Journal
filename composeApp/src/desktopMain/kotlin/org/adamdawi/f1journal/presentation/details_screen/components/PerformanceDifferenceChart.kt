@@ -7,7 +7,7 @@ import com.patrykandpatrick.vico.multiplatform.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.multiplatform.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.multiplatform.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.multiplatform.cartesian.rememberCartesianChart
-import org.adamdawi.f1journal.domain.DriverPerformanceDifference
+import org.adamdawi.f1journal.domain.model.DriverPerformanceDifference
 
 @Composable
 fun PerformanceDifferenceChart(

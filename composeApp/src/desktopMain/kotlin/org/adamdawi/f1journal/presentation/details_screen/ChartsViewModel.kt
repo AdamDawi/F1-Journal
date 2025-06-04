@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.adamdawi.f1journal.domain.DriverPerformanceDifference
-import org.adamdawi.f1journal.domain.F1Repository
+import org.adamdawi.f1journal.domain.model.DriverPerformanceDifference
+import org.adamdawi.f1journal.domain.repository.F1Repository
 import org.adamdawi.f1journal.domain.util.Result
 
 class ChartsViewModel(
@@ -18,18 +18,49 @@ class ChartsViewModel(
 ): ViewModel() {
     private val _state = MutableStateFlow(ChartsState())
     val state = _state.onStart {
+        _state.update {
+            it.copy(isLoading = true)
+        }
         getDrivers()
+        getTemperatureLapTime()
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue =_state.value
     )
+    private var loadingCounter = MutableStateFlow(2)
+
+    private fun getTemperatureLapTime() {
+        viewModelScope.launch(Dispatchers.IO) {
+            when(val result = repository.getTemperatureVsLapTimes()){
+                    is Result.Error -> {
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                error = result.error.toString()
+                            )
+                        }
+                    }
+                    is Result.Success -> {
+                        val sortedData = result.data.sortedBy { it.trackTemperature }
+                        _state.update {
+                            it.copy(temperatureLapTime = sortedData)
+                        }
+                        loadingCounter.update {
+                            it-1
+                        }
+                        if(loadingCounter.value==0){
+                            _state.update {
+                                it.copy(isLoading = false)
+                            }
+                        }
+                    }
+                }
+
+        }
+    }
 
     private fun getDrivers(){
-
-        _state.update {
-            it.copy(isLoading = true)
-        }
         viewModelScope.launch(Dispatchers.IO) {
             when(val result = repository.getDrivers()){
                 is Result.Error -> {
@@ -52,9 +83,16 @@ class ChartsViewModel(
                     val sortedPerformanceDifferences = performanceDifferences.sortedByDescending { it.performanceDifference }
                     _state.update {
                         it.copy(
-                            isLoading = false,
                             driversDifference = sortedPerformanceDifferences
                         )
+                    }
+                    loadingCounter.update {
+                        it-1
+                    }
+                    if(loadingCounter.value==0){
+                        _state.update {
+                            it.copy(isLoading = false)
+                        }
                     }
                 }
             }

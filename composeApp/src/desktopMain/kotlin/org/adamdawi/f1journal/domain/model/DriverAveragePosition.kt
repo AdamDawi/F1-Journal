@@ -1,4 +1,4 @@
-package org.adamdawi.f1journal.domain
+package org.adamdawi.f1journal.domain.model
 
 data class DriverAveragePosition(
     val driverName: String,
