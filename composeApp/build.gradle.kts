@@ -63,6 +63,10 @@ kotlin {
 
             //chart library
             implementation(libs.vico.multiplatform)
+
+            //xml conversion
+            implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.0")
+            implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -21,12 +21,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.adamdawi.f1journal.presentation.components.ErrorDialog
+import org.adamdawi.f1journal.presentation.components.LoadingScreen
 import org.adamdawi.f1journal.presentation.details_screen.DetailsScreen
 import org.koin.compose.viewmodel.koinViewModel
 import java.awt.FileDialog
@@ -38,106 +41,140 @@ class HomeScreen : Screen {
     @Composable
     override fun Content() {
         val viewModel: HomeViewModel = koinViewModel()
+        val state = viewModel.state.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
         val navigator = LocalNavigator.currentOrThrow
-        var showError by remember { mutableStateOf(false) }
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-        ){
-            Column(
-                modifier = Modifier.Companion.fillMaxSize(),
-                horizontalAlignment = Alignment.Companion.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Button(
-                    onClick = {
-                        navigator.push(
-                            DetailsScreen(Random.Default.nextInt())
-                        )
+
+        if(state.value.isLoading){
+            LoadingScreen()
+        }else{
+            HomeContent(
+                scope = scope,
+                onAction = { action ->
+                    when (action) {
+                        HomeAction.OnNavigateToCharts -> {
+                            navigator.push(
+                                DetailsScreen(Random.nextInt())
+                            )
+                        }
+
+                        else -> viewModel.onAction(action)
                     }
-                ) {
-                    Text("Go to charts screen")
+                },
+                getExportedJson = {
+                    viewModel.getExportedJson()
+                },
+                getExportedXML = {
+                    viewModel.getExportedXML()
                 }
+            )
+        }
 
-                ErrorDialog(show = showError, message = "Error importing/exporting file", onDismiss = { showError = false })
-            }
-            Row(
-                modifier = Modifier.align(Alignment.TopEnd)
+    }
+}
+
+@Composable
+fun HomeContent(
+    scope: CoroutineScope,
+    onAction: (HomeAction) -> Unit,
+    getExportedJson: suspend () -> String,
+    getExportedXML: suspend () -> String
+){
+    var showError by remember { mutableStateOf(false) }
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)
+    ){
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = {
+                    onAction(HomeAction.OnNavigateToCharts)
+                }
             ) {
-                Button(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            val file = chooseFile(filter = ExtensionFilter.XML)
-
-                            if(file?.extension == "xml"){
-                                viewModel.onAction(HomeAction.SendXMLFile(file))
-                            }else{
-                                showError = true
-                            }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
-                ) {
-                    Text("Import XML file")
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Button(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            val file = chooseFile(ExtensionFilter.JSON)
-
-                            if(file?.extension == "json"){
-                                viewModel.onAction(HomeAction.SendJSONFile(file))
-                            }else{
-                                showError = true
-                            }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
-                ) {
-                    Text("Import JSON file")
-                }
+                Text("Go to charts screen")
             }
 
-            Row(
-                modifier = Modifier.align(Alignment.TopStart)
+            ErrorDialog(show = showError, message = "Error importing/exporting file", onDismiss = { showError = false })
+        }
+        Row(
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            Button(
+                onClick = {
+                    scope.launch(Dispatchers.IO) {
+                        val file = chooseFile(filter = ExtensionFilter.XML)
+
+                        if(file?.extension == "xml"){
+                            onAction(HomeAction.SendXMLFile(file))
+                        }else{
+                            showError = true
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
             ) {
-                Button(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            val file = chooseFile(filter = ExtensionFilter.XML, isSave = true)
+                Text("Import XML file")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(
+                onClick = {
+                    scope.launch(Dispatchers.IO) {
+                        val file = chooseFile(ExtensionFilter.JSON)
 
-                            if(file != null && file.extension == "xml"){
-                                val xmlData = viewModel.getExportedXML()
-                                file.writeText(xmlData)
-                            } else {
-                                showError = true
-                            }
+                        if(file?.extension == "json"){
+                            onAction(HomeAction.SendJSONFile(file))
+                        }else{
+                            showError = true
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
-                ) {
-                    Text("Export XML file")
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Button(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            val file = chooseFile(filter = ExtensionFilter.JSON, isSave = true)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
+            ) {
+                Text("Import JSON file")
+            }
+        }
 
-                            if(file != null && file.extension == "json"){
-                                val jsonData = viewModel.getExportedJson()
-                                file.writeText(jsonData)
-                            } else {
-                                showError = true
-                            }
+        Row(
+            modifier = Modifier.align(Alignment.TopStart)
+        ) {
+            Button(
+                onClick = {
+                    scope.launch(Dispatchers.IO) {
+                        val file = chooseFile(filter = ExtensionFilter.XML, isSave = true)
+
+                        if(file != null && file.extension == "xml"){
+                            val xmlData = getExportedXML()
+                            file.writeText(xmlData)
+                        } else {
+                            showError = true
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
-                ) {
-                    Text("Export JSON file")
-                }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
+            ) {
+                Text("Export XML file")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(
+                onClick = {
+                    scope.launch(Dispatchers.IO) {
+                        val file = chooseFile(filter = ExtensionFilter.JSON, isSave = true)
+
+                        if(file != null && file.extension == "json"){
+                            val jsonData = getExportedJson()
+                            file.writeText(jsonData)
+                        } else {
+                            showError = true
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
+            ) {
+                Text("Export JSON file")
             }
         }
     }
