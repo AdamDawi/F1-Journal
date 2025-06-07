@@ -28,9 +28,11 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.adamdawi.f1journal.presentation.components.ErrorDialog
+import org.adamdawi.f1journal.domain.model.DataType
+import org.adamdawi.f1journal.presentation.components.CustomDialog
 import org.adamdawi.f1journal.presentation.components.LoadingScreen
 import org.adamdawi.f1journal.presentation.details_screen.DetailsScreen
+import org.adamdawi.f1journal.presentation.util.ObserveAsEvents
 import org.koin.compose.viewmodel.koinViewModel
 import java.awt.FileDialog
 import java.awt.Frame
@@ -44,11 +46,31 @@ class HomeScreen : Screen {
         val state = viewModel.state.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
         val navigator = LocalNavigator.currentOrThrow
+        var showInfoDialog by remember { mutableStateOf(false) }
+        var infoDialogTitle by remember { mutableStateOf("") }
+        var infoDialogText by remember { mutableStateOf("") }
+
+        ObserveAsEvents(viewModel.events) { event ->
+            when(event){
+                is HomeEvent.Error ->{
+                    infoDialogTitle = "Error"
+                    infoDialogText = event.error
+                    showInfoDialog = true
+                }
+                is HomeEvent.Info ->{
+                    infoDialogTitle = "Info"
+                    infoDialogText = event.info
+                    showInfoDialog = true
+                }
+            }
+        }
 
         if(state.value.isLoading){
             LoadingScreen()
         }else{
             HomeContent(
+                infoDialogTitle = infoDialogTitle,
+                infoText = infoDialogText,
                 scope = scope,
                 onAction = { action ->
                     when (action) {
@@ -62,10 +84,14 @@ class HomeScreen : Screen {
                     }
                 },
                 getExportedJson = {
-                    viewModel.getExportedJson()
+                    viewModel.getExportedData(DataType.JSON)
                 },
                 getExportedXML = {
-                    viewModel.getExportedXML()
+                    viewModel.getExportedData(DataType.XML)
+                },
+                showInfo = showInfoDialog,
+                onInfoDialogDismiss = {
+                    showInfoDialog = false
                 }
             )
         }
@@ -75,10 +101,14 @@ class HomeScreen : Screen {
 
 @Composable
 fun HomeContent(
+    infoDialogTitle: String,
+    infoText: String,
     scope: CoroutineScope,
     onAction: (HomeAction) -> Unit,
     getExportedJson: suspend () -> String,
-    getExportedXML: suspend () -> String
+    getExportedXML: suspend () -> String,
+    showInfo: Boolean,
+    onInfoDialogDismiss: () -> Unit
 ){
     var showError by remember { mutableStateOf(false) }
     Box(modifier = Modifier
@@ -98,7 +128,8 @@ fun HomeContent(
                 Text("Go to charts screen")
             }
 
-            ErrorDialog(show = showError, message = "Error importing/exporting file", onDismiss = { showError = false })
+            CustomDialog(title = "Error", show = showError, message = "Error importing/exporting file", onDismiss = { showError = false })
+            CustomDialog(title = infoDialogTitle, show = showInfo, message = infoText, onDismiss = onInfoDialogDismiss)
         }
         Row(
             modifier = Modifier.align(Alignment.TopEnd)

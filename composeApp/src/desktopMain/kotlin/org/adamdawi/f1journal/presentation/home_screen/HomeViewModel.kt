@@ -4,15 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.adamdawi.f1journal.domain.model.DataType
 import org.adamdawi.f1journal.domain.repository.F1Repository
 import org.adamdawi.f1journal.domain.util.Result
 import org.json.JSONArray
@@ -32,40 +35,55 @@ class HomeViewModel(
         initialValue = _state.value
     )
 
+    private val eventChannel = Channel<HomeEvent>()
+    val events = eventChannel.receiveAsFlow()
+
     fun onAction(action: HomeAction) {
         when (action) {
             is HomeAction.SendXMLFile -> {
-                val jsonObject = convertXmlFileToJson(action.file)
-                _state.update {
-                    it.copy(isLoading = true)
-                }
-                viewModelScope.launch(Dispatchers.IO) {
-                    repository.sendF1Data(jsonObject.toString())
-                    withContext(Dispatchers.Main){
-                        _state.update {
-                            it.copy(isLoading = false)
-                        }
-                    }
-                }
-                println(jsonObject)
+                sendDataToServer(action.file, DataType.XML)
             }
 
             is HomeAction.SendJSONFile -> {
-                val jsonObject = action.file.readText()
-                _state.update {
-                    it.copy(isLoading = true)
-                }
-                viewModelScope.launch(Dispatchers.IO) {
-                    repository.sendF1Data(jsonObject)
-                    withContext(Dispatchers.Main){
+                sendDataToServer(action.file, DataType.JSON)
+            }
+            else -> {}
+        }
+    }
+
+    private fun sendDataToServer(file: File, dataType: DataType){
+        _state.update {
+            it.copy(isLoading = true)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val jsonObject: String = when (dataType) {
+                DataType.JSON -> file.readText()
+                DataType.XML -> convertXmlFileToJson(file).toString()
+            }
+            println(jsonObject)
+            when(val result = repository.sendF1Data(jsonObject)){
+                is Result.Error -> {
+                    withContext(Dispatchers.Main) {
                         _state.update {
                             it.copy(isLoading = false)
                         }
+                        eventChannel.send(HomeEvent.Error(result.error.name))
                     }
                 }
-                println(jsonObject)
+                is Result.Success -> {
+                    withContext(Dispatchers.Main) {
+                        _state.update {
+                            it.copy(isLoading = false)
+                        }
+                        eventChannel.send(HomeEvent.Info("Import Success"))
+                    }
+                }
             }
-            else -> {}
+            withContext(Dispatchers.Main){
+                _state.update {
+                    it.copy(isLoading = false)
+                }
+            }
         }
     }
 
@@ -99,8 +117,7 @@ class HomeViewModel(
         return drivers
     }
 
-
-    suspend fun getExportedJson(): String {
+    suspend fun getExportedData(dataType: DataType): String {
         withContext(Dispatchers.Main) {
             _state.update {
                 it.copy(isLoading = true)
@@ -112,6 +129,7 @@ class HomeViewModel(
                     _state.update {
                         it.copy(isLoading = false)
                     }
+                    eventChannel.send(HomeEvent.Error(result.error.name))
                 }
                 return result.error.name
             }
@@ -121,39 +139,19 @@ class HomeViewModel(
                     _state.update {
                         it.copy(isLoading = false)
                     }
+                    eventChannel.send(HomeEvent.Info("Export Success"))
                 }
-                return Json.encodeToString(result.data)
-            }
-        }
+                when(dataType){
+                    DataType.JSON -> {
+                        return Json.encodeToString(result.data)
+                    }
+                    DataType.XML -> {
+                        val xmlMapper = XmlMapper()
+                        val xmlString = xmlMapper.writeValueAsString(result.data)
 
-    }
-
-    suspend fun getExportedXML(): String {
-        withContext(Dispatchers.Main) {
-            _state.update {
-                it.copy(isLoading = true)
-            }
-        }
-        when (val result = repository.getF1Data()) {
-            is Result.Error -> {
-                withContext(Dispatchers.Main) {
-                    _state.update {
-                        it.copy(isLoading = false)
+                        return xmlString
                     }
                 }
-                return result.error.name
-            }
-
-            is Result.Success -> {
-                withContext(Dispatchers.Main) {
-                    _state.update {
-                        it.copy(isLoading = false)
-                    }
-                }
-                val xmlMapper = XmlMapper()
-                val xmlString = xmlMapper.writeValueAsString(result.data)
-
-                return xmlString
             }
         }
     }
