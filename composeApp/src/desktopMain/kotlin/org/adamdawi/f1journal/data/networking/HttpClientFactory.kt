@@ -2,6 +2,7 @@ package org.adamdawi.f1journal.data.networking
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -24,6 +25,13 @@ object HttpClientFactory {
             install(Logging) {
                 level = LogLevel.ALL
             }
+
+            install(HttpTimeout) {
+                requestTimeoutMillis = 300_000      // 5 minutes (entire request)
+                connectTimeoutMillis = 120_000       // 2 minutes to connect
+                socketTimeoutMillis = 300_000       // 5 minutes of inactivity
+            }
+
             defaultRequest {
                 contentType(Application.Json)
             }

@@ -29,6 +29,38 @@ class ChartsViewModel(
         initialValue =_state.value
     )
 
+    private fun getDrivers(){
+        viewModelScope.launch(Dispatchers.IO) {
+            when(val result = repository.getDrivers()){
+                is Result.Error -> {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = result.error.toString()
+                        )
+                    }
+                }
+                is Result.Success -> {
+                    _state.update {
+                        it.copy(drivers = result.data)
+                    }
+                    val performanceDifferences = result.data.map { driver ->
+                        val difference = driver.drvAvgPosition - driver.rainyAvgPosition
+                        DriverPerformanceDifference(driver.driverName, difference)
+                    }
+                    // Sorting the list to show who has the biggest positive difference (i.e., improvement in the rain)
+                    val sortedPerformanceDifferences = performanceDifferences.sortedByDescending { it.performanceDifference }
+                    _state.update {
+                        it.copy(
+                            driversDifference = sortedPerformanceDifferences
+                        )
+                    }
+                    checkLoadingComplete()
+                }
+            }
+        }
+    }
+
     private fun getTemperatureLapTime() {
         viewModelScope.launch(Dispatchers.IO) {
             when(val result = repository.getTemperatureVsLapTimes()){
@@ -51,37 +83,6 @@ class ChartsViewModel(
         }
     }
 
-    private fun getDrivers(){
-        viewModelScope.launch(Dispatchers.IO) {
-            when(val result = repository.getDrivers()){
-                is Result.Error -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = result.error.toString()
-                        )
-                    }
-                }
-                is Result.Success -> {
-                    _state.update {
-                        it.copy(drivers = result.data)
-                    }
-                    val performanceDifferences = result.data.map { driver ->
-                        val difference = driver.dryAvgPosition - driver.rainyAvgPosition
-                        DriverPerformanceDifference(driver.driverName, difference)
-                    }
-                    // Sorting the list to show who has the biggest positive difference (i.e., improvement in the rain)
-                    val sortedPerformanceDifferences = performanceDifferences.sortedByDescending { it.performanceDifference }
-                    _state.update {
-                        it.copy(
-                            driversDifference = sortedPerformanceDifferences
-                        )
-                    }
-                    checkLoadingComplete()
-                }
-            }
-        }
-    }
     private fun checkLoadingComplete() {
         if (_state.value.drivers != null && _state.value.temperatureLapTime != null) {
             _state.update { it.copy(isLoading = false) }

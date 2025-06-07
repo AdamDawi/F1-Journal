@@ -193,7 +193,7 @@ suspend fun loadChartData(
 ) {
     modelProducer.runTransaction {
         columnSeries {
-            series(data.map { it.dryAvgPosition })
+            series(data.map { it.drvAvgPosition })
             series(data.map { it.rainyAvgPosition })
         }
         extras { it[legendKey] = listOf("Dry", "Rain") }
