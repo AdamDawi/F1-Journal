@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.adamdawi.f1journal.domain.repository.F1Repository
@@ -34,16 +36,32 @@ class HomeViewModel(
         when (action) {
             is HomeAction.SendXMLFile -> {
                 val jsonObject = convertXmlFileToJson(action.file)
+                _state.update {
+                    it.copy(isLoading = true)
+                }
                 viewModelScope.launch(Dispatchers.IO) {
                     repository.sendF1Data(jsonObject.toString())
+                    withContext(Dispatchers.Main){
+                        _state.update {
+                            it.copy(isLoading = false)
+                        }
+                    }
                 }
                 println(jsonObject)
             }
 
             is HomeAction.SendJSONFile -> {
                 val jsonObject = action.file.readText()
+                _state.update {
+                    it.copy(isLoading = true)
+                }
                 viewModelScope.launch(Dispatchers.IO) {
                     repository.sendF1Data(jsonObject)
+                    withContext(Dispatchers.Main){
+                        _state.update {
+                            it.copy(isLoading = false)
+                        }
+                    }
                 }
                 println(jsonObject)
             }
@@ -82,29 +100,61 @@ class HomeViewModel(
     }
 
 
-    suspend fun getExportedJson(): String =
+    suspend fun getExportedJson(): String {
+        withContext(Dispatchers.Main) {
+            _state.update {
+                it.copy(isLoading = true)
+            }
+        }
         when (val result = repository.getF1Data()) {
             is Result.Error -> {
-                result.error.name
+                withContext(Dispatchers.Main) {
+                    _state.update {
+                        it.copy(isLoading = false)
+                    }
+                }
+                return result.error.name
             }
 
             is Result.Success -> {
-                Json.encodeToString(result.data)
+                withContext(Dispatchers.Main) {
+                    _state.update {
+                        it.copy(isLoading = false)
+                    }
+                }
+                return Json.encodeToString(result.data)
             }
         }
 
+    }
 
-    suspend fun getExportedXML(): String =
+    suspend fun getExportedXML(): String {
+        withContext(Dispatchers.Main) {
+            _state.update {
+                it.copy(isLoading = true)
+            }
+        }
         when (val result = repository.getF1Data()) {
             is Result.Error -> {
-                result.error.name
+                withContext(Dispatchers.Main) {
+                    _state.update {
+                        it.copy(isLoading = false)
+                    }
+                }
+                return result.error.name
             }
 
             is Result.Success -> {
+                withContext(Dispatchers.Main) {
+                    _state.update {
+                        it.copy(isLoading = false)
+                    }
+                }
                 val xmlMapper = XmlMapper()
                 val xmlString = xmlMapper.writeValueAsString(result.data)
 
-                xmlString
+                return xmlString
             }
         }
+    }
 }
