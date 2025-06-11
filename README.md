@@ -2,15 +2,21 @@
 
 **F1-Journal** is a Kotlin Multiplatform Desktop application for comparing Formula 1 driver performance under various weather and temperature conditions.
 
+> ⚠️ **Note:** This project focuses on core functionality, multiplatform architecture, and data analysis.  
+> 🎨 **UI design was not a priority** — it's kept minimal, functional, and secondary to the app's logic.
+
 ## ⭐️Features
 ### 1. 📊 Average Driver Positions – Dry vs Rain
 Displays a chart of the average race positions for each driver in dry and wet conditions.
+![Image](https://github.com/user-attachments/assets/c9948664-1f41-4a70-8a63-bb300581add8)
 
 ### 2. 💧 Performance Difference – Dry − Rain
 Highlights the performance gap between dry and wet tracks for each driver. Sorted to show who performs best in the rain.
+![Image](https://github.com/user-attachments/assets/bd5db8f1-599e-453f-950e-084b7f53a211)
 
 ### 📅 Movie Details
 Analyzes how asphalt temperature affects drivers' lap times.
+![Image](https://github.com/user-attachments/assets/06b61c2d-ab3a-4dc7-8102-ca9c30e7d6ff)
 
 ### 🔀 Data Import / Export
 The app allows importing and exporting data to/from a server:
