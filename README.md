@@ -1,6 +1,6 @@
 # <img src="https://github.com/user-attachments/assets/6cc25ed8-e5aa-4ac3-9ea5-77014038a777" width="60" height="60" align="center" /> F1-Journal
 
-**F1-Journal** is a Kotlin Multiplatform Desktop application for comparing Formula 1 driver performance under various weather and temperature conditions.
+**F1-Journal** is a Compose Multiplatform Desktop application for comparing Formula 1 driver performance under various weather and temperature conditions.
 
 > ⚠️ **Note:** This project focuses on core functionality, multiplatform architecture, and data analysis.  
 > 🎨 **UI design was not a priority** — it's kept minimal, functional, and secondary to the app's logic.
