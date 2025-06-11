@@ -38,8 +38,6 @@ Supported Formats
 
 - **Voyager** - Navigation between screens
 
-- **Coil** - Efficient image loading and loading states.
-
 - **Jackson / org.json** - JSON and XML processing
 
 - **BuildConfig** - Configuration management for build-time constants, including platform-specific values (e.g., API URLs, environment flags). ([BuildConfig plugin documentation](https://github.com/gmazzo/gradle-buildconfig-plugin))
