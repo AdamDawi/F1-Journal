@@ -36,10 +36,13 @@ Supported Formats
 
 - **Jackson / org.json** - JSON and XML processing
 
+- **BuildConfig** - Configuration management for build-time constants, including platform-specific values (e.g., API URLs, environment flags). ([BuildConfig plugin documentation](https://github.com/gmazzo/gradle-buildconfig-plugin))
+
 - **MVI architecture** - Scalable and maintainable state management
 
 ## Here are some overview pictures:
-
+![Image](https://github.com/user-attachments/assets/4c97ca4e-b1f9-413a-b239-f68a5c4b6f45)
+![Image](https://github.com/user-attachments/assets/1a16a320-d9a1-4350-a883-0670c404e012)
 
 ## Installation
 
